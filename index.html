@@ -1,47 +1,132 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
   <title>PDF to Excel</title>
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f7f8fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .card {
+      background: #ffffff;
+      padding: 28px 32px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      width: 340px;
+      text-align: center;
+    }
+
+    h2 {
+      margin: 0 0 16px;
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #1e4fd6;
+    }
+
+    button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .hint {
+      margin-top: 12px;
+      font-size: 12px;
+      color: #6b7280;
+    }
+  </style>
 </head>
+
 <body>
+  <div class="card">
+    <h2>PDF to Excel</h2>
 
-<h2>Upload PDF</h2>
+    <input type="file" id="file" accept="application/pdf" />
 
-<input type="file" id="file" accept="application/pdf" />
-<button onclick="upload()">Upload & Download Excel</button>
+    <button id="uploadBtn" onclick="upload()">
+      Upload & Download Excel
+    </button>
 
-<script>
-  async function upload() {
-    const fileInput = document.getElementById("file");
-    const file = fileInput.files[0];
+    <div class="hint">Supported format: PDF</div>
+  </div>
 
-    if (!file) {
-      alert("Please select a PDF");
-      return;
+  <script>
+    async function upload() {
+      const fileInput = document.getElementById("file");
+      const button = document.getElementById("uploadBtn");
+      const file = fileInput.files[0];
+
+      if (!file) {
+        alert("Please select a PDF file");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      button.disabled = true;
+      button.textContent = "Processing...";
+
+      try {
+        const res = await fetch(
+          "https://upi-expense-tracker-dnaa.vercel.app/upload",
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+
+        if (!res.ok) throw new Error("Upload failed");
+
+        const blob = await res.blob();
+
+        // 📅 today's date → YYYY-MM-DD
+        const today = new Date().toISOString().split("T")[0];
+        const fileName = `expenses-${today}.xlsx`;
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        a.click();
+
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        alert("Something went wrong. Please try again.");
+      } finally {
+        button.disabled = false;
+        button.textContent = "Upload & Download Excel";
+      }
     }
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const res = await fetch("https://upi-expense-tracker-dnaa.vercel.app/upload", {
-      method: "POST",
-      body: formData
-    });
-
-    if (!res.ok) {
-      alert("Upload failed");
-      return;
-    }
-
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "expenses.xlsx";
-    a.click();
-  }
-</script>
-
+  </script>
 </body>
 </html>
