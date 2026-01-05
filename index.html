@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PDF to Excel</title>
+</head>
+<body>
+
+<h2>Upload PDF</h2>
+
+<input type="file" id="file" accept="application/pdf" />
+<button onclick="upload()">Upload & Download Excel</button>
+
+<script>
+  async function upload() {
+    const fileInput = document.getElementById("file");
+    const file = fileInput.files[0];
+
+    if (!file) {
+      alert("Please select a PDF");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch("https://upi-expense-tracker-dnaa.vercel.app/upload", {
+      method: "POST",
+      body: formData
+    });
+
+    if (!res.ok) {
+      alert("Upload failed");
+      return;
+    }
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "expenses.xlsx";
+    a.click();
+  }
+</script>
+
+</body>
+</html>
